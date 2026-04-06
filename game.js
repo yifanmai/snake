@@ -217,6 +217,19 @@ class Player {
 
     /** Add a listener to the keyboard. */
     addKeyboardEventListener() {
+        /**
+         * The input handler is very simple and crude.
+         *
+         * At every time step, we move the snake in the direction
+         * of the last pressed arrow key.
+         *
+         * This means that if the player presses more than one key in the
+         * same time step, only the last input will take effect, and the rest
+         * will be "eaten", which is not a great experience.
+         *
+         * We could improve this by adding an input buffer that allows
+         * queueing multiple key presses.
+         */
         addEventListener("keydown", (event) => {
             let nextDirection = null;
             if (event.code === "ArrowUp") {
