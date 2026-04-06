@@ -1,3 +1,7 @@
+#controls {
+  text-align: center;
+}
+
 #display table {
     margin: 16px auto;
 }
@@ -19,12 +23,12 @@
 
 
 @keyframes snake-animation {
-  from {
-    background: #000;
-  }
-  to {
-    background: #666;
-  }
+    from {
+        background: #000;
+    }
+    to {
+        background: #666;
+    }
 }
 
 #display .apple {

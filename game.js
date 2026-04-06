@@ -113,7 +113,7 @@ class TableDisplay extends Display {
             this.cells.push(cellsRow)
             tableElement.appendChild(rowElement);
         }
-        divElement.appendChild(tableElement);
+        divElement.replaceChildren(tableElement);
     }
 
     /**
@@ -267,7 +267,6 @@ class Game {
         this.world.reset();
         const snakeRow = Math.floor(this.world.height / 2);
         const snakeCol = Math.floor(this.world.width / 2);
-        console.log(this.world);
         this.world.cells[snakeRow][snakeCol] = SNAKE_CELL;
         this.snakeCells = [[snakeRow, snakeCol]];
         this.placeApple();
@@ -328,7 +327,8 @@ class Game {
         if (ateApple) {
             const applePlaced = this.placeApple();
             if (!applePlaced) {
-                this.stop(LOST);
+                this.stop(WON);
+                return;
             }
         } else {
             const snakeTail = this.snakeCells.pop();
@@ -361,10 +361,27 @@ class Game {
     }
 }
 
+/** A HTML button that performs an action when clicked. */
+class ControlButton {
+    constructor(label, handler) {
+        const button = document.createElement("input");
+        button.setAttribute("type", "button");
+        button.setAttribute("value", label)
+        button.addEventListener("click", handler);
+        const parent = document.getElementById("controls")
+        parent.appendChild(button);
+        
+    }
+}
+
 /** Main function. */
 function main() {
     const game = new Game(8, 8);
     game.start();
+    new ControlButton("New Game", () => {
+        game.reset();
+        game.start();
+    });
 }
 
 main();
