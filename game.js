@@ -1,4 +1,4 @@
-    const UP = 0;
+const UP = 0;
 const LEFT = 1;
 const DOWN = 2;
 const RIGHT = 3;
@@ -20,6 +20,11 @@ const DIRECTION_TO_OPPOSITE = [
     UP,
     LEFT
 ];
+
+READY = "READY";
+RUNNING = "RUNNING";
+WON = "WON";
+LOST = "LOST";
 
 class World {
     /**
@@ -62,6 +67,14 @@ class Display {
      */
     render(world) {
         throw new Error("render() is not implemented");
+    }
+
+    /**
+     *
+     * @param {string} message
+     */
+    showMessage(message) {
+        throw new Error("showMessage() is not implemented");
     }
 }
 
@@ -111,6 +124,15 @@ class TableDisplay extends Display {
             }
         }        
     }
+    
+    /**
+     *
+     * @param {string} message
+     */
+    showMessage(message) {
+        // TODO: Update a div instead
+        alert(message);
+    }
 }
 
 class ConsoleDisplay extends Display {
@@ -145,6 +167,15 @@ class ConsoleDisplay extends Display {
             console.log(line);
         }
     }
+    
+    /**
+     *
+     * @param {string} message
+     */
+    showMessage(message) {
+        console.log(message);
+    }
+
 }
 
 /**
@@ -207,10 +238,13 @@ class Game {
         this.reset();
         this.timer = null;
         this.player = new Player();
-
     }
 
     reset() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
         this.world.reset();
         const snakeRow = Math.floor(this.world.height / 2);
         const snakeCol = Math.floor(this.world.width / 2);
@@ -220,6 +254,7 @@ class Game {
         this.placeApple();
         this.display.reset(this.world.height, this.world.width);
         this.display.render(this.world);
+        this.state = READY;
     }
 
     placeApple() {
@@ -232,11 +267,24 @@ class Game {
                 }
             }
         }
+        if (availableCells.length === 0) {
+            return false;
+        } 
         const randomIndex = randomInt(availableCells.length);
         this.appleCell = availableCells[randomIndex];
         const appleRow = this.appleCell[0];
         const appleCol = this.appleCell[1];
         this.world.cells[appleRow][appleCol] = APPLE_CELL;
+        return true;
+    }
+
+    setState(state) {
+        self.state = state;
+        if (state === "WON") {
+            this.display;
+        } else if (state === "LOST") {
+            this.display;
+        }
     }
 
     step() {
@@ -256,7 +304,7 @@ class Game {
 
         if (this.world.cells[nextRow][nextCol] === SNAKE_CELL) {
             this.display.render(this.world);
-            this.stop()
+            this.stop(LOST);
             return;
         }
 
@@ -266,9 +314,11 @@ class Game {
         this.world.cells[nextRow][nextCol] = SNAKE_CELL;
 
         if (ateApple) {
-            this.placeApple();
+            const applePlaced = this.placeApple();
+            if (!applePlaced) {
+                this.stop(LOST);
+            }
         } else {
-
             const snakeTail = this.snakeCells.pop();
             const snakeTailRow = snakeTail[0];
             const snakeTailCol = snakeTail[1];
@@ -280,12 +330,19 @@ class Game {
 
     start() {
         this.timer = setInterval(() => this.step(), 250);
+        this.state = RUNNING;
     }
 
-    stop() {
+    stop(state) {
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;
+        }
+        this.state = state;
+        if (state === WON) {
+            this.display.showMessage("You won!");
+        } else if (state === LOST) {
+            this.display.showMessage("You lost!");
         }
     }
 }
