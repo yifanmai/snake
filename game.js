@@ -1,12 +1,10 @@
+// Direction enum
 const UP = 0;
 const LEFT = 1;
 const DOWN = 2;
 const RIGHT = 3;
 
-const EMPTY_CELL = 0;
-const SNAKE_CELL = 1;
-const APPLE_CELL = 2;
-
+// Direction to coordinates of vector
 const DIRECTION_TO_DIFF = [
     [-1, 0],
     [0, -1],
@@ -14,6 +12,7 @@ const DIRECTION_TO_DIFF = [
     [0, 1]
 ];
 
+// Direction to opposite direction
 const DIRECTION_TO_OPPOSITE = [
     DOWN,
     RIGHT,
@@ -21,14 +20,21 @@ const DIRECTION_TO_OPPOSITE = [
     LEFT
 ];
 
+// Cell objects enum
+const EMPTY_CELL = 0;
+const SNAKE_CELL = 1;
+const APPLE_CELL = 2;
+
+// Game state enum
 READY = "READY";
 RUNNING = "RUNNING";
 WON = "WON";
 LOST = "LOST";
 
+/** Grid in which each cell is a snake segment, an apple, or empty. */
 class World {
     /**
-     *
+     * Create a World.
      * @param {number} height
      * @param {number} width
      */
@@ -42,6 +48,10 @@ class World {
         this.reset();
     }
 
+
+    /**
+     * Reset all cells to empty.
+     */
     reset() {
         for (let row = 0; row < this.width; ++row) {
             for (let col = 0; col < this.width; ++col) {
@@ -51,9 +61,10 @@ class World {
     }
 }
 
+/** A display that shows the grid and messages. */
 class Display {
     /**
-     *
+     * Clear the display and resizes it to the requested dimensions.
      * @param {number} height
      * @param {number} width
      */
@@ -62,7 +73,7 @@ class Display {
     }
 
     /**
-     *
+     * Render the current state of the grid.
      * @param {World} world
      */
     render(world) {
@@ -70,7 +81,7 @@ class Display {
     }
 
     /**
-     *
+     * Show a message to the user.
      * @param {string} message
      */
     showMessage(message) {
@@ -78,9 +89,10 @@ class Display {
     }
 }
 
+/** A display that uses a HTML table to display the grid. */
 class TableDisplay extends Display {
     /**
-     *
+     * Create an empty HTML table for displaying the game.
      * @param {number} height
      * @param {number} width
      */
@@ -105,7 +117,7 @@ class TableDisplay extends Display {
     }
 
     /**
-     *
+     * Render the current state of the grid to the HTML table.
      * @param {World} world
      */
     render(world) {
@@ -126,18 +138,19 @@ class TableDisplay extends Display {
     }
     
     /**
-     *
+     * Show an alert containing the message.
      * @param {string} message
      */
     showMessage(message) {
-        // TODO: Update a div instead
+        // TODO: Update a HTML element instead
         alert(message);
     }
 }
 
+/** A display that uses the console to display the grid. Mostly for debugging. */
 class ConsoleDisplay extends Display {
     /**
-     *
+     * Clear the console.
      * @param {number} height
      * @param {number} width
      */
@@ -146,7 +159,7 @@ class ConsoleDisplay extends Display {
     }
 
     /**
-     *
+     * Log current state of the grid to the console.
      * @param {World} world
      */
     render(world) {
@@ -169,7 +182,7 @@ class ConsoleDisplay extends Display {
     }
     
     /**
-     *
+     * Log the message ot the console.
      * @param {string} message
      */
     showMessage(message) {
@@ -179,7 +192,7 @@ class ConsoleDisplay extends Display {
 }
 
 /**
- *
+ * Return a random integer greater than equal to zero, and less than max.
  * @param {number} max
  * @return {number} A random integer X where 0 <= X < max
  */
@@ -187,19 +200,23 @@ function randomInt(max) {
     return Math.floor(Math.random() * max);
 }
 
+/** Player controls */
 class Player {
+    /** Create a Player object. */
     constructor() {
         this.direction = RIGHT;
         this.previousDirection = this.direction;
-        this.bindToKeyboardEvents();
+        this.addKeyboardEventListener();
     }
 
+    /** Get the player's move for this time step. */
     getMove() {
         this.previousDirection = this.direction;
         return this.direction;
     }
 
-    bindToKeyboardEvents() {
+    /** Add a listener to the keyboard. */
+    addKeyboardEventListener() {
         addEventListener("keydown", (event) => {
             let nextDirection = null;
             if (event.code === "ArrowUp") {
@@ -226,9 +243,10 @@ class Player {
     }
 }
 
+/** State and program logic for the snake game. */
 class Game {
     /**
-     *
+     * Create a game with a grid of the requested size.
      * @param {number} height
      * @param {number} width
      */
@@ -240,6 +258,7 @@ class Game {
         this.player = new Player();
     }
 
+    /** Reset the game. */
     reset() {
         if (this.timer) {
             clearInterval(this.timer);
@@ -257,6 +276,7 @@ class Game {
         this.state = READY;
     }
 
+    /** Place the next apple on a random empty cell on the grid. */
     placeApple() {
         const availableCells = [];
         // TODO: Check that there is at least one legal space
@@ -278,15 +298,7 @@ class Game {
         return true;
     }
 
-    setState(state) {
-        self.state = state;
-        if (state === "WON") {
-            this.display;
-        } else if (state === "LOST") {
-            this.display;
-        }
-    }
-
+    /** Run the next step of the game. */
     step() {
         const direction = this.player.getMove();
         const snakeHead = this.snakeCells[0];
@@ -328,11 +340,13 @@ class Game {
         this.display.render(this.world);
     }
 
+    /** Start the game. */
     start() {
         this.timer = setInterval(() => this.step(), 250);
         this.state = RUNNING;
     }
 
+    /** Stop the game as a win or loss. */
     stop(state) {
         if (this.timer) {
             clearInterval(this.timer);
@@ -341,12 +355,13 @@ class Game {
         this.state = state;
         if (state === WON) {
             this.display.showMessage("You won!");
-        } else if (state === LOST) {
+        } else if (state === LOST || state === undefined) {
             this.display.showMessage("You lost!");
         }
     }
 }
 
+/** Main function. */
 function main() {
     const game = new Game(8, 8);
     game.start();
