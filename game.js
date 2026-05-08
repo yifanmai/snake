@@ -200,17 +200,62 @@ function randomInt(max) {
     return Math.floor(Math.random() * max);
 }
 
+
+
 /** Player controls */
 class Player {
+    /** Get the player's move for this time step. */
+    getMove(cells, snakeCells) {
+    }
+}
+
+function getAppleCoordinates(world) {
+    for (let row = 0; row < world.height; ++row) {
+        for (let col = 0; col < world.width; ++col) {
+            if (world.cells[row][col] === APPLE_CELL) {
+                return [row, col];
+            }
+        }
+    }
+    throw new Error("Could not find apple");
+}
+
+function isDirectionSafe(snakeHeadCoords, world, direction) {
+    const nextRow = (snakeHeadCoords[0] + DIRECTION_TO_DIFF[direction][0]) % world.height;
+    const nextCol = (snakeHeadCoords[1] + DIRECTION_TO_DIFF[direction][1]) % world.width;
+    return world.cells[nextRow][nextCol] !== SNAKE_CELL;
+}
+
+class CPUPlayer extends Player {
+    getMove(world, snakeCells) {
+        const appleRow = getAppleCoordinates(world)[0];
+        const snakeRow = snakeCells[0][0];
+        const snakeCol = snakeCells[0][1];
+
+        if (!isDirectionSafe(snakeCells[0], world, RIGHT)) {
+            return DOWN;
+        } if (!isDirectionSafe(snakeCells[0], world, DOWN)) {
+            return RIGHT;
+        } else if (appleRow !== snakeRow) {
+            return DOWN;
+        } else {
+            return RIGHT;
+        }
+    }
+}
+
+/** Player controls */
+class HumanPlayer extends Player {
     /** Create a Player object. */
     constructor() {
+        super();
         this.direction = RIGHT;
         this.previousDirection = this.direction;
         this.addKeyboardEventListener();
     }
 
     /** Get the player's move for this time step. */
-    getMove() {
+    getMove(cells, snakeCells) {
         this.previousDirection = this.direction;
         return this.direction;
     }
@@ -268,7 +313,6 @@ class Game {
         this.display = new TableDisplay();
         this.reset();
         this.timer = null;
-        this.player = new Player();
     }
 
     /** Reset the game. */
@@ -312,7 +356,7 @@ class Game {
 
     /** Run the next step of the game. */
     step() {
-        const direction = this.player.getMove();
+        const direction = this.player.getMove(this.world, this.snakeCells);
         const snakeHead = this.snakeCells[0];
         const snakeHeadRow = snakeHead[0];
         const snakeHeadCol = snakeHead[1];
@@ -354,8 +398,9 @@ class Game {
     }
 
     /** Start the game. */
-    start() {
-        this.timer = setInterval(() => this.step(), 250);
+    start(player, framesPerSecond) {
+        this.player = player;
+        this.timer = setInterval(() => this.step(), 1 / framesPerSecond * 1000);
         this.state = RUNNING;
     }
 
@@ -394,11 +439,16 @@ class ControlButton {
 
 /** Main function. */
 function main() {
+    const humanPlayer = new HumanPlayer();
+    const cpuPlayer = new CPUPlayer();
     const game = new Game(8, 8);
-    game.start();
-    new ControlButton("New Game", () => {
+    new ControlButton("New Game (Human)", () => {
         game.reset();
-        game.start();
+        game.start(humanPlayer, 4);
+    });
+    new ControlButton("New Game (CPU)", () => {
+        game.reset();
+        game.start(cpuPlayer, 20);
     });
 }
 
